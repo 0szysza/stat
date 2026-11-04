@@ -217,3 +217,5 @@ body[data-calculator-mode=interval] .eta-block strong{overflow-wrap:anywhere}
 .selector-heading .amount-help{position:relative;display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12px;line-height:18px;color:#91a0b5}
 @media(max-width:767px){.site-header__inner{gap:10px 12px}.brand{flex:1;min-width:0}.brand__copy{min-width:0}.tool-switcher{flex:none}.stat-nav{order:1;width:100%;gap:6px}.stat-nav a{flex:1;min-height:44px;padding:8px;font-size:13px}}
 @media(max-width:680px){.selector-heading .amount-help{max-width:100%}}
+
+.site-footer__message{margin:0 0 8px;color:#cbd5e1;font-size:12px;font-weight:500;line-height:16px}
