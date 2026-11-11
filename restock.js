@@ -64,7 +64,7 @@ function syncMode() {
   });
 }
 function render() {
-  setText("restock-now", dateInputFormat.format(nowStart));
+  $("restock-now").value = dateInputFormat.format(nowStart);
   const fields = durationFields();
   let error = "";
   for (const unit of units) {
@@ -80,17 +80,21 @@ function render() {
   const result = !error && !empty ? calculateRestock(start, fields) : null;
   error ||= result?.error || "";
   const valid = result && !error;
-  $("restock-empty").hidden = Boolean(valid);
-  $("restock-output").hidden = !valid;
-  setText("restock-message", error);
+  $("restock-message").classList.toggle("is-neutral", !error);
+  setText("restock-message", error || (empty ? "Enter the shop's remaining time to see when it restocks." : ""));
   if (!valid) {
     setText("restock-result-title", "Shop restocks at");
+    for (const id of ["restock-result-time", "restock-result-date", "restock-quick-time", "restock-countdown", "restock-summary", "restock-progress-text"]) setText(id, "—");
+    setText("restock-countdown-label", "Time left");
+    $("restock-progress-bar").style.width = "0%";
+    $("restock-progress-bar").parentElement.setAttribute("aria-valuenow", "0");
     return;
   }
   const remaining = result.resetAt.getTime() - Date.now();
   const restocked = remaining <= 0;
   setText("restock-result-title", restocked ? "Shop restocked at" : "Shop restocks at");
   setText("restock-result-time", timeFormat.format(result.resetAt));
+  setText("restock-quick-time", timeFormat.format(result.resetAt));
   setText("restock-result-date", dateFormat.format(result.resetAt));
   setText("restock-countdown-label", restocked ? "Status" : "Time left");
   const totalSeconds = Math.max(0, Math.ceil(remaining / 1000));
@@ -99,8 +103,12 @@ function render() {
   const minutes = Math.floor(totalSeconds % 3600 / 60);
   const seconds = totalSeconds % 60;
   setText("restock-countdown", restocked ? "Restocked" : `${days ? days + "d " : ""}${hours}h ${minutes}m ${seconds}s`);
-  const duration = result.durationMs / 60000;
-  setText("restock-summary", `${Math.floor(duration / 1440)}d ${Math.floor(duration % 1440 / 60)}h ${duration % 60}m from ${dateInputFormat.format(start)}.`);
+  setText("restock-summary", dateInputFormat.format(start));
+  const progress = result.durationMs === 0 ? (restocked ? 100 : 0) : Math.max(0, Math.min(100, (1 - remaining / result.durationMs) * 100));
+  const percent = progress.toFixed(1);
+  setText("restock-progress-text", `${percent}%`);
+  $("restock-progress-bar").style.width = `${progress}%`;
+  $("restock-progress-bar").parentElement.setAttribute("aria-valuenow", percent);
 }
 
 function initNumberControls(root) {

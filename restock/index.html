@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/stat/styles.css?v=20261111-restock">
-  <script type="module" src="/stat/restock.js?v=20261111-1"></script>
+  <link rel="stylesheet" href="/stat/styles.css?v=20261111-restock-2">
+  <script type="module" src="/stat/restock.js?v=20261111-2"></script>
 <link rel="canonical" href="https://0szysza.github.io/stat/restock/">
 <meta name="description" content="Find out exactly when a BGSI shop restocks. Start from now or a chosen date and time, then enter the remaining days, hours and minutes.">
 <meta property="og:type" content="website">
@@ -83,61 +83,55 @@
           <button class="account-count" type="button" data-restock-mode="time" aria-pressed="false">From Time</button>
         </div>
       </div>
-    </section>
-
-    <div class="restock-grid">
-      <section class="account-card restock-inputs" aria-labelledby="shop-timer-title">
-        <div class="account-card__head">
-          <span class="account-card__icon" aria-hidden="true"><svg class="icon"><use href="#icon-clock"></use></svg></span>
-          <h2 id="shop-timer-title">Shop timer</h2>
-        </div>
-        <div class="restock-start">
-          <div id="restock-now-field">
-            <span class="restock-label">Starting from</span>
-            <div class="restock-now-row"><strong id="restock-now"></strong><button class="restock-now-button" id="restock-use-now" type="button">Use current time</button></div>
-            <p class="restock-hint">Uses the current time whenever you edit the shop timer.</p>
+      <div class="selector-controls">
+        <div class="time-controls">
+          <div class="snapshot-row" id="restock-now-field">
+            <div class="snapshot-label"><svg class="icon" aria-hidden="true"><use href="#icon-clock"></use></svg><label for="restock-now">Starting from</label><button class="help-tip" type="button" aria-label="About the starting time" aria-describedby="restock-now-help">?<span class="help-tip__bubble" id="restock-now-help" role="tooltip">Uses the current time whenever you edit the shop timer. Use the clock button to update it to now. The restock time stays saved when you return.</span></button></div>
+            <div class="field date-control">
+              <input id="restock-now" type="text" readonly autocomplete="off">
+              <button class="date-control__open" id="restock-use-now" type="button" aria-label="Use current time" title="Use current time"><svg class="icon" aria-hidden="true"><use href="#icon-clock"></use></svg></button>
+            </div>
           </div>
-          <div class="field" id="restock-time-field" hidden>
-            <label for="restock-start">Starting date and time</label>
-            <div class="date-control">
+          <div class="snapshot-row" id="restock-time-field" hidden>
+            <div class="snapshot-label"><svg class="icon" aria-hidden="true"><use href="#icon-clock"></use></svg><label for="restock-start">Starting date and time</label><button class="help-tip" type="button" aria-label="About the selected time" aria-describedby="restock-start-help">?<span class="help-tip__bubble" id="restock-start-help" role="tooltip">Choose the date and time when you read the shop timer. The countdown is added to this saved starting point.</span></button></div>
+            <div class="field date-control">
               <input id="restock-start" type="text" readonly aria-haspopup="dialog" aria-controls="restock-start-picker" aria-expanded="false" autocomplete="off">
               <button class="date-control__open" type="button" data-date-for="restock-start" aria-label="Choose starting date and time" aria-haspopup="dialog" aria-controls="restock-start-picker" aria-expanded="false"><svg class="icon" aria-hidden="true"><use href="#icon-calendar"></use></svg></button>
               <div class="date-picker" id="restock-start-picker" role="dialog" aria-label="Starting date and time" hidden></div>
             </div>
-            <p class="restock-hint">Choose when you read the shop timer.</p>
           </div>
         </div>
-        <fieldset class="restock-duration">
-          <legend>Time until restock</legend>
-          <div class="restock-duration__fields">
-            <div class="field"><label for="restock-days">Days</label><input id="restock-days" type="number" min="0" step="1" inputmode="numeric" placeholder="0" autocomplete="off"></div>
-            <div class="field"><label for="restock-hours">Hours</label><input id="restock-hours" type="number" min="0" max="23" step="1" inputmode="numeric" placeholder="0" autocomplete="off"></div>
-            <div class="field"><label for="restock-minutes">Minutes</label><input id="restock-minutes" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="0" autocomplete="off"></div>
-          </div>
-        </fieldset>
-        <p class="account-message" id="restock-message" role="status"></p>
-      </section>
+      </div>
+    </section>
 
-      <section class="account-card restock-result" aria-labelledby="restock-result-title">
+    <div class="accounts-grid" role="group" aria-label="Shop restock estimate">
+      <section class="account-card restock-card" aria-labelledby="shop-timer-title">
         <div class="account-card__head">
-          <span class="account-card__icon" aria-hidden="true"><svg class="icon"><use href="#icon-calendar"></use></svg></span>
-          <h2 id="restock-result-title">Shop restocks at</h2>
+          <span class="account-card__icon" aria-hidden="true"><svg class="icon"><use href="#icon-clock"></use></svg></span>
+          <h2 id="shop-timer-title">Shop restock</h2>
+          <div class="account-card__quick"><span>RESTOCK</span><strong id="restock-quick-time">—</strong></div>
         </div>
-        <div class="restock-empty" id="restock-empty">Enter the days, hours and minutes shown in the shop.</div>
-        <div id="restock-output" hidden>
-          <div class="restock-eta" aria-live="polite" aria-atomic="true">
-            <strong id="restock-result-time"></strong>
-            <span id="restock-result-date"></span>
+        <fieldset class="account-card__fields restock-duration">
+          <legend>Time until restock</legend>
+          <div class="field"><label for="restock-days">Days</label><input id="restock-days" type="number" min="0" step="1" inputmode="numeric" placeholder="0" autocomplete="off"></div>
+          <div class="field"><label for="restock-hours">Hours</label><input id="restock-hours" type="number" min="0" max="23" step="1" inputmode="numeric" placeholder="0" autocomplete="off"></div>
+          <div class="field"><label for="restock-minutes">Minutes</label><input id="restock-minutes" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="0" autocomplete="off"></div>
+        </fieldset>
+        <div class="pace-group"><p class="account-message is-neutral" id="restock-message" role="status">Enter the shop's remaining time to see when it restocks.</p></div>
+        <div class="account-card__results">
+          <div class="progress-line"><span>Restock progress</span><strong id="restock-progress-text">—</strong></div>
+          <div class="progress-inspector">
+            <div class="progress-track" role="progressbar" aria-label="Shop restock progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="restock-progress-bar"></span></div>
           </div>
-          <div class="restock-countdown">
-            <span id="restock-countdown-label">Time left</span>
-            <strong id="restock-countdown" role="timer" aria-live="off"></strong>
+          <div class="eta-block" aria-live="polite" aria-atomic="true"><span id="restock-result-title">Shop restocks at</span><strong id="restock-result-time">—</strong><small id="restock-result-date">—</small></div>
+          <div class="stat-grid">
+            <div class="stat"><span id="restock-countdown-label">Time left</span><strong id="restock-countdown" role="timer" aria-live="off">—</strong></div>
+            <div class="stat"><span>Starting from</span><strong id="restock-summary">—</strong></div>
           </div>
-          <p class="restock-hint" id="restock-summary"></p>
         </div>
-        <p class="restock-timezone" id="restock-timezone"></p>
       </section>
     </div>
+    <p class="restock-timezone" id="restock-timezone"></p>
   </main>
 
   <footer class="site-footer">
