@@ -2,13 +2,13 @@
 
 Forecast your BGSI rebirths and bubbles toward a target or across a fixed time interval, with saved starting counts and your own pace.
 
-**[Rebirth Calculator](https://0szysza.github.io/stat/rebirth/)** · **[Bubble Calculator](https://0szysza.github.io/stat/bubble/)** · [CCU Tracker](https://0szysza.github.io/trackccu/) · [Tool hub](https://0szysza.github.io/)
+**[Bubble Calculator](https://0szysza.github.io/stat/)** · **[Restock Time](https://0szysza.github.io/stat/restock/)** · **[Rebirth Calculator](https://0szysza.github.io/stat/rebirth/)** · [CCU Tracker](https://0szysza.github.io/trackccu/) · [Tool hub](https://0szysza.github.io/)
 
 ## Features
 
 | Feature | What it does |
 | --- | --- |
-| Rebirth and Bubble sections | Switch between `/stat/rebirth/` and `/stat/bubble/` in the header. Each keeps its own saved inputs, names and settings. |
+| Bubble, Restock Time and Rebirth | Bubble is the default at `/stat/`. Header tabs appear in that order, and each calculator keeps its own saved settings. |
 | Bubble amount shortcuts | Enter plain numbers or K/M/B/T suffixes, including decimals: `250M`, `1.5B`, `0.25T`. Results use compact units with exact totals on hover. |
 | Three calculation options | One selector offers **Reach a goal**, **For a duration** and **Until a time**. Estimate a goal finish time or the total and gained rebirths over a duration or up to a deadline. |
 | 1, 2 or 3 accounts | Choose how many accounts to track. Every account keeps its own inputs and occupies a full-width card. |
@@ -26,6 +26,12 @@ Forecast your BGSI rebirths and bubbles toward a target or across a fixed time i
 | Responsive layout | Inputs and results sit side by side on desktop, with stacked sections on smaller screens. |
 | Shared navigation | The Tools dropdown opens CCU Tracker; the header arrow opens the tool hub. Social links stay in the footer. |
 | Link previews | Static Discord/social metadata and a branded 1200 × 630 cover. |
+
+## Restock Time
+
+Open **Restock Time** in the header. Choose **From Now** to use the current device time, or **From Time** to choose the date and time when you read the shop's timer. Enter the remaining **Days**, **Hours** and **Minutes** in separate fields. The result shows the restock time, full date, local time zone and a live countdown.
+
+In **From Now**, editing the duration records a fresh starting time; **Use current time** refreshes it without changing the duration. The calculated deadline stays fixed as time passes and survives reopening. **From Time** retains its chosen date and time. A shop day means 24 elapsed hours, including across daylight saving changes. Hours accept 0–23 and minutes 0–59; days must be a nonnegative whole number. Blank units count as zero. A timer of zero means the shop is already ready.
 
 ## Bubble Calculator
 
@@ -89,3 +95,4 @@ Time progress  = clamp(elapsed minutes since S / D, 0, 1) × 100%
 ~~~
 
 In **Until a time**, `D` is the difference in minutes between the selected end and the recorded start. The end must be after the start. Duration must be positive. A zero rebirth pace still gives a valid interval: the count stays unchanged while the timer advances. Goal and time forecasts keep independent inputs and starting times in device-local storage. The two time options share the starting counts and pace while retaining both the duration and deadline settings.
+

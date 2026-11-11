@@ -219,3 +219,27 @@ body[data-calculator-mode=interval] .eta-block strong{overflow-wrap:anywhere}
 @media(max-width:680px){.selector-heading .amount-help{max-width:100%}}
 
 .site-footer__message{margin:0 0 8px;color:#cbd5e1;font-size:12px;font-weight:500;line-height:16px}
+
+/* Shop restock calculator. */
+.restock-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.restock-start{margin-bottom:24px}
+.restock-label{display:block;margin-bottom:8px;color:#a8b5c9;font-size:12px;font-weight:700}
+.restock-now-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.restock-now-row strong{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.restock-now-button{min-height:36px;padding:7px 11px;border:1px solid #34415b;border-radius:7px;background:#222d44;color:#cbd5e1;font-size:12px;font-weight:600;cursor:pointer}
+.restock-now-button:hover{border-color:#5CDDFA;color:#fff}
+.restock-hint{margin-top:9px;color:#91a0b5;font-size:12px;line-height:1.6}
+.restock-duration{min-width:0;margin:0;padding:0;border:0}
+.restock-duration legend{margin-bottom:12px;padding:0;color:#cbd5e1;font-size:13px;font-weight:700}
+.restock-duration__fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.restock-inputs input[aria-invalid=true]{border-color:#e17295}
+.restock-eta{display:flex;flex-direction:column;gap:8px;margin:5px 0 24px}
+.restock-eta strong{color:#5CDDFA;font-size:clamp(40px,5vw,56px);font-weight:800;line-height:1.1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.restock-eta>span{color:#cbd5e1;font-size:15px;line-height:1.5}
+.restock-countdown{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:18px;border-top:1px solid #293149}
+.restock-countdown>span{color:#94a3b8;font-size:12px}
+.restock-countdown strong{color:#f8fafc;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.restock-timezone{margin-top:20px;color:#91a0b5;font-size:11px;line-height:1.6;overflow-wrap:anywhere}
+.restock-empty{padding:12px 0 22px;color:#94a3b8;font-size:14px;line-height:1.6}
+@media(max-width:767px){.restock-grid{grid-template-columns:minmax(0,1fr)}.stat-nav a{white-space:nowrap}}
+@media(max-width:400px){.stat-nav a{padding-inline:5px;font-size:12px}.restock-duration__fields{gap:8px}}
