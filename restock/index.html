@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/stat/styles.css?v=20261111-restock-2">
-  <script type="module" src="/stat/restock.js?v=20261111-2"></script>
+  <script type="module" src="/stat/restock.js?v=20261111-3"></script>
 <link rel="canonical" href="https://0szysza.github.io/stat/restock/">
 <meta name="description" content="Find out exactly when a BGSI shop restocks. Start from now or a chosen date and time, then enter the remaining days, hours and minutes.">
 <meta property="og:type" content="website">
@@ -117,7 +117,7 @@
           <div class="field"><label for="restock-hours">Hours</label><input id="restock-hours" type="number" min="0" max="23" step="1" inputmode="numeric" placeholder="0" autocomplete="off"></div>
           <div class="field"><label for="restock-minutes">Minutes</label><input id="restock-minutes" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="0" autocomplete="off"></div>
         </fieldset>
-        <div class="pace-group"><p class="account-message is-neutral" id="restock-message" role="status">Enter the shop's remaining time to see when it restocks.</p></div>
+        <div class="pace-group"><p class="account-message" id="restock-message" role="status"></p></div>
         <div class="account-card__results">
           <div class="progress-line"><span>Restock progress</span><strong id="restock-progress-text">—</strong></div>
           <div class="progress-inspector">
@@ -131,7 +131,6 @@
         </div>
       </section>
     </div>
-    <p class="restock-timezone" id="restock-timezone"></p>
   </main>
 
   <footer class="site-footer">

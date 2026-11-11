@@ -80,8 +80,7 @@ function render() {
   const result = !error && !empty ? calculateRestock(start, fields) : null;
   error ||= result?.error || "";
   const valid = result && !error;
-  $("restock-message").classList.toggle("is-neutral", !error);
-  setText("restock-message", error || (empty ? "Enter the shop's remaining time to see when it restocks." : ""));
+  setText("restock-message", error);
   if (!valid) {
     setText("restock-result-title", "Shop restocks at");
     for (const id of ["restock-result-time", "restock-result-date", "restock-quick-time", "restock-countdown", "restock-summary", "restock-progress-text"]) setText(id, "—");
@@ -359,7 +358,6 @@ $("restock-use-now").addEventListener("click", () => {
 restoreState();
 syncMode();
 initNumberControls($("shop-timer-title").closest("section"));
-setText("restock-timezone", `All times use your local time zone (${Intl.DateTimeFormat().resolvedOptions().timeZone}).`);
 render();
 setInterval(render, 1000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
