@@ -2,13 +2,15 @@ import { calculate, calculateInterval, restoreSnapshot } from "./calc.mjs?v=2026
 
 import { parseAmount, formatAmount, stepAmount } from "./amounts.mjs?v=20261004-1";
 
-const isBubble = document.body.dataset.stat === "bubble";
-const statUnit = isBubble ? "bubbles" : "rebirths";
-const statLabel = isBubble ? "Bubbles" : "Rebirths";
-const countNoun = isBubble ? "bubble" : "rebirth";
-const paceLabel = isBubble ? "Bubble" : "Rebirth";
-const amountFormat = { format: value => isBubble ? formatAmount(value) : numberFormat.format(value) };
-const amountInput = (id, value, step = "1") => `<input id="${id}" data-stat-amount type="${isBubble ? "text" : "number"}" min="0" step="${step}" inputmode="${isBubble ? "text" : step === "1" ? "numeric" : "decimal"}" autocomplete="off" ${isBubble ? 'aria-describedby="amount-help" placeholder="e.g. 1.5B"' : ""} value="${value}">`;
+const stat = document.body.dataset.stat;
+const isHatches = stat === "hatches";
+const usesAmountShortcuts = stat === "bubble" || isHatches;
+const statUnit = isHatches ? "hatches" : usesAmountShortcuts ? "bubbles" : "rebirths";
+const statLabel = isHatches ? "Hatches" : usesAmountShortcuts ? "Bubbles" : "Rebirths";
+const countNoun = isHatches ? "hatch" : usesAmountShortcuts ? "bubble" : "rebirth";
+const paceLabel = isHatches ? "Hatch" : usesAmountShortcuts ? "Bubble" : "Rebirth";
+const amountFormat = { format: value => usesAmountShortcuts ? formatAmount(value) : numberFormat.format(value) };
+const amountInput = (id, value, step = "1") => `<input id="${id}" data-stat-amount type="${usesAmountShortcuts ? "text" : "number"}" min="0" step="${step}" inputmode="${usesAmountShortcuts ? "text" : step === "1" ? "numeric" : "decimal"}" autocomplete="off" ${usesAmountShortcuts ? 'aria-describedby="amount-help" placeholder="e.g. 1.5B"' : ""} value="${value}">`;
 
 const $ = (id) => document.getElementById(id);
 const accounts = [
@@ -27,9 +29,9 @@ const calendarMonthFormat = new Intl.DateTimeFormat("en-GB", { month: "long", ye
 const calendarDayFormat = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 const accountCalculations = new Map();
 const previewPositions = new Map();
-if (isBubble) accounts.forEach(account => { account.current = "0"; account.target = ""; account.rebirths = ""; });
-let accountCount = isBubble ? 1 : 2;
-let calculatorMode = isBubble ? "interval" : "goal";
+if (usesAmountShortcuts) accounts.forEach(account => { account.current = "0"; account.target = ""; account.rebirths = ""; });
+let accountCount = usesAmountShortcuts ? 1 : 2;
+let calculatorMode = usesAmountShortcuts ? "interval" : "goal";
 let durationMode = "duration";
 let modeStates = {};
 document.body.dataset.accountCount = String(accountCount);
@@ -96,7 +98,7 @@ function readDate(input) {
   return Number.isFinite(date.getTime()) ? date : null;
 }
 function readNumber(input) {
-  return isBubble && input.hasAttribute("data-stat-amount") ? parseAmount(input.value) : input.value.trim() === "" ? NaN : Number(input.value);
+  return usesAmountShortcuts && input.hasAttribute("data-stat-amount") ? parseAmount(input.value) : input.value.trim() === "" ? NaN : Number(input.value);
 }
 function formatDuration(milliseconds) {
   if (milliseconds === null) return "No pace";
@@ -111,7 +113,7 @@ function paceForAccount(key) {
   const rebirths = readNumber($(`${key}-rebirths`));
   const minutes = readNumber($(`${key}-minutes`));
   if (!Number.isFinite(rebirths) || rebirths < 0 || !Number.isFinite(minutes) || minutes <= 0) {
-    return { error: `Enter valid ${statUnit} and a number of minutes above zero.${isBubble ? " Amounts accept M, B and T." : ""}` };
+    return { error: `Enter valid ${statUnit} and a number of minutes above zero.${usesAmountShortcuts ? " Amounts accept M, B and T." : ""}` };
   }
   return { rebirths, minutes };
 }
@@ -183,7 +185,7 @@ function renderAccount(key, common) {
   const isInterval = calculatorMode === "interval";
   if (!Number.isFinite(current) || current < 0 || (!isInterval && (!Number.isFinite(target) || target < 0))) {
     const blank = $(`${key}-current`).value.trim() === "" || (!isInterval && $(`${key}-target`).value.trim() === "");
-    clearResult(key, blank ? "" : isBubble ? "Enter a valid amount, for example 250M or 1.5B (up to 9,007,199,254,740,991)." : "Counts must be zero or greater.");
+    clearResult(key, blank ? "" : usesAmountShortcuts ? "Enter a valid amount, for example 250M or 1.5B (up to 9,007,199,254,740,991)." : "Counts must be zero or greater.");
     return;
   }
   const pace = paceForAccount(key);
@@ -228,9 +230,9 @@ function renderAccount(key, common) {
     $(`${key}-eta-date`).textContent = "—";
     $(`${key}-quick-eta`).textContent = pace.rebirths === 0 ? "No pace" : "—";
   }
-  if (isBubble) {
+  if (usesAmountShortcuts) {
     for (const [field, value] of [["remaining", isInterval ? result.totalGain : result.remaining], ["projected", result.projected], ["eta", isInterval ? result.finalCount : NaN]]) {
-      $(`${key}-${field}`).title = Number.isFinite(value) ? `${numberFormat.format(Math.floor(value))} bubbles` : "";
+      $(`${key}-${field}`).title = Number.isFinite(value) ? `${numberFormat.format(Math.floor(value))} ${statUnit}` : "";
     }
   }
   $(`${key}-message`).textContent = "";
@@ -284,7 +286,7 @@ function initNumberControls(root) {
 }
 
 function stepNumber(input, direction) {
-  if (isBubble && input.hasAttribute("data-stat-amount")) {
+  if (usesAmountShortcuts && input.hasAttribute("data-stat-amount")) {
     input.value = stepAmount(input.value, direction);
     input.dispatchEvent(new Event("input", { bubbles: true }));
     input.focus();
@@ -594,7 +596,7 @@ document.addEventListener("pointerdown", (event) => {
     for (const account of accounts) hideProgressTooltip(account.key);
   }
 });
-const storageKey = isBubble ? "bubble-calculator:v1" : "rebirth-calculator:v1";
+const storageKey = isHatches ? "hatches-calculator:v1" : usesAmountShortcuts ? "bubble-calculator:v1" : "rebirth-calculator:v1";
 const accountFields = ["current", "target", "rebirths", "minutes"];
 
 function saveState() {
