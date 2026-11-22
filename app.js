@@ -1,3 +1,5 @@
+import { createNumberControls } from "./number-controls.mjs?v=20261122";
+import { createDatePicker } from "./date-picker.mjs?v=20261122";
 import { calculate, calculateInterval, restoreSnapshot } from "./calc.mjs?v=20261002-7";
 
 import { parseAmount, formatAmount, stepAmount } from "./amounts.mjs?v=20261004-1";
@@ -25,8 +27,6 @@ const timeFormat = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "
 const dateFormat = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 const shortDateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
 const dateInputFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-const calendarMonthFormat = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" });
-const calendarDayFormat = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 const accountCalculations = new Map();
 const previewPositions = new Map();
 if (usesAmountShortcuts) accounts.forEach(account => { account.current = "0"; account.target = ""; account.rebirths = ""; });
@@ -65,7 +65,7 @@ function accountMarkup(account) {
         <span class="pace-fields__per" aria-hidden="true">per</span>
         <div class="field"><label for="${key}-minutes">Minutes</label><input id="${key}-minutes" type="number" min="0.01" step="any" inputmode="decimal" value="10"></div>
       </div></fieldset>
-      <div class="account-card__results" aria-live="polite">
+      <div class="account-card__results">
         <div class="progress-line"><span id="${key}-progress-label">Estimated progress</span><strong id="${key}-progress-text">—</strong></div>
         <div class="progress-inspector">
           <div class="progress-track" role="progressbar" tabindex="0" aria-label="${name} progress" aria-description="Hover, tap, or use arrow keys to inspect a point" aria-describedby="${key}-progress-tooltip" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="${key}-progress-bar"></span></div>
@@ -83,7 +83,7 @@ function accountMarkup(account) {
           <div class="stat"><span>Time left</span><strong id="${key}-duration">—</strong></div>
           <div class="stat stat--wide"><span>Estimated now</span><strong id="${key}-projected">—</strong></div>
         </div>
-        <p class="account-message" id="${key}-message"></p>
+        <p class="account-message" id="${key}-message" role="status"></p>
       </div>
     </section>`;
 }
@@ -269,222 +269,8 @@ function render() {
   }
 }
 
-function initNumberControls(root) {
-  root.querySelectorAll('input[type="number"], input[data-stat-amount]').forEach((input) => {
-    if (input.closest(".number-control")) return;
-    const label = input.dataset.stepLabel || input.labels?.[0]?.textContent.trim() || "value";
-    const control = document.createElement("div");
-    control.className = "number-control";
-    input.before(control);
-    control.append(input);
-    control.insertAdjacentHTML("beforeend", `
-      <span class="number-control__steps">
-        <button type="button" class="number-control__step" data-direction="1" aria-label="Increase ${label}"><svg viewBox="0 0 12 8" aria-hidden="true"><path d="m1.5 6 4.5-4 4.5 4"/></svg></button>
-        <button type="button" class="number-control__step" data-direction="-1" aria-label="Decrease ${label}"><svg viewBox="0 0 12 8" aria-hidden="true"><path d="m1.5 2 4.5 4 4.5-4"/></svg></button>
-      </span>`);
-  });
-}
-
-function stepNumber(input, direction) {
-  if (usesAmountShortcuts && input.hasAttribute("data-stat-amount")) {
-    input.value = stepAmount(input.value, direction);
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    input.focus();
-    return;
-  }
-  const step = Number(input.dataset.stepSize || (input.step === "any" ? 1 : input.step) || 1);
-  const min = input.min === "" ? -Infinity : Number(input.min);
-  const max = input.max === "" ? Infinity : Number(input.max);
-  const current = input.value.trim() === "" ? NaN : Number(input.value);
-  let next = Number.isFinite(current) ? current + direction * step
-    : direction > 0 ? Math.max(Number.isFinite(min) ? min : 0, step) : Number.isFinite(min) ? min : 0;
-  if (input.dataset.wrap === "true") {
-    if (next > max) next = min;
-    if (next < min) next = max;
-  } else {
-    next = Math.min(max, Math.max(min, next));
-  }
-  next = Number(next.toFixed(4));
-  input.value = input.dataset.pad ? String(next).padStart(Number(input.dataset.pad), "0") : String(next);
-  input.dispatchEvent(new Event("input", { bubbles: true }));
-  input.focus();
-}
-
-document.addEventListener("click", (event) => {
-  const button = event.target.closest(".number-control__step");
-  if (!button) return;
-  stepNumber(button.closest(".number-control").querySelector("input"), Number(button.dataset.direction));
-});
-
-
-const pickerState = { openId: null, draft: null, year: 0, month: 0 };
-const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-const twoDigits = (value) => String(value).padStart(2, "0");
-
-function syncPickerTime() {
-  if (!pickerState.openId || !pickerState.draft) return;
-  const picker = $(`${pickerState.openId}-picker`);
-  const hourInput = picker.querySelector('[data-time-unit="hour"]');
-  const minuteInput = picker.querySelector('[data-time-unit="minute"]');
-  if (!hourInput || !minuteInput) return;
-  const valid = hourInput.value !== "" && minuteInput.value !== "" && hourInput.validity.valid && minuteInput.validity.valid;
-  picker.querySelector(".date-picker__apply").disabled = !valid;
-  if (!valid) return false;
-  const hours = Number(hourInput.value);
-  const minutes = Number(minuteInput.value);
-  pickerState.draft.setHours(Number.isFinite(hours) && hourInput.value !== "" ? Math.min(23, Math.max(0, Math.trunc(hours))) : pickerState.draft.getHours());
-  pickerState.draft.setMinutes(Number.isFinite(minutes) && minuteInput.value !== "" ? Math.min(59, Math.max(0, Math.trunc(minutes))) : pickerState.draft.getMinutes(), 0, 0);
-  return true;
-}
-
-function renderDatePicker() {
-  const { openId, draft, year, month } = pickerState;
-  if (!openId) return;
-  const picker = $(`${openId}-picker`);
-  const offset = (new Date(year, month, 1).getDay() + 6) % 7;
-  const days = new Date(year, month + 1, 0).getDate();
-  const today = new Date();
-  const cells = Array.from({ length: offset }, () => '<span class="date-picker__empty" aria-hidden="true"></span>');
-  for (let day = 1; day <= days; day += 1) {
-    const date = new Date(year, month, day);
-    const selected = sameDay(date, draft);
-    const isToday = sameDay(date, today);
-    cells.push(`<button type="button" class="date-picker__day${selected ? " is-selected" : ""}${isToday ? " is-today" : ""}" data-day="${day}" aria-label="${calendarDayFormat.format(date)}" aria-pressed="${selected}">${day}</button>`);
-  }
-  picker.innerHTML = `
-    <div class="date-picker__header">
-      <button type="button" class="date-picker__nav" data-calendar-action="previous" aria-label="Previous month"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
-      <strong>${calendarMonthFormat.format(new Date(year, month, 1))}</strong>
-      <button type="button" class="date-picker__nav" data-calendar-action="next" aria-label="Next month"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
-    </div>
-    <div class="date-picker__weekdays" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-    <div class="date-picker__days" role="group" aria-label="Choose a day">${cells.join("")}</div>
-    <div class="date-picker__time">
-      <div class="date-picker__time-fields">
-        <div class="field"><label for="${openId}-hour">Hour</label><input id="${openId}-hour" type="number" min="0" max="23" step="1" value="${twoDigits(draft.getHours())}" data-time-unit="hour" data-step-label="hour" data-wrap="true" data-pad="2" inputmode="numeric"></div>
-        <span class="date-picker__time-colon" aria-hidden="true">:</span>
-        <div class="field"><label for="${openId}-minute">Minute</label><input id="${openId}-minute" type="number" min="0" max="59" step="1" value="${twoDigits(draft.getMinutes())}" data-time-unit="minute" data-step-label="minute" data-wrap="true" data-pad="2" inputmode="numeric"></div>
-      </div>
-    </div>
-    <div class="date-picker__footer"><button type="button" data-calendar-action="now">Now</button><span></span><button type="button" data-calendar-action="cancel">Cancel</button><button type="button" class="date-picker__apply" data-calendar-action="apply">Apply</button></div>`;
-  initNumberControls(picker);
-  if (!picker.hidden) positionDatePicker();
-}
-
-function positionDatePicker() {
-  const id = pickerState.openId;
-  if (!id) return;
-  const picker = $(`${id}-picker`);
-  picker.classList.remove("is-above", "is-floating");
-  const field = $(id).getBoundingClientRect();
-  const height = picker.getBoundingClientRect().height;
-  if (window.innerHeight - field.bottom >= height + 8) return;
-  picker.classList.add(field.top >= height + 8 ? "is-above" : "is-floating");
-}
-
-function closeDatePicker(restoreFocus = false) {
-  const id = pickerState.openId;
-  if (!id) return;
-  $(`${id}-picker`).hidden = true;
-  $(id).setAttribute("aria-expanded", "false");
-  document.querySelector(`[data-date-for="${id}"]`).setAttribute("aria-expanded", "false");
-  pickerState.openId = null;
-  pickerState.draft = null;
-  if (restoreFocus) $(id).focus();
-}
-
-function openDatePicker(id) {
-  if (pickerState.openId === id) return;
-  closeDatePicker();
-  pickerState.openId = id;
-  pickerState.draft = new Date(readDate($(id)) || new Date());
-  pickerState.year = pickerState.draft.getFullYear();
-  pickerState.month = pickerState.draft.getMonth();
-  renderDatePicker();
-  $(`${id}-picker`).hidden = false;
-  positionDatePicker();
-  $(id).setAttribute("aria-expanded", "true");
-  document.querySelector(`[data-date-for="${id}"]`).setAttribute("aria-expanded", "true");
-  $(`${id}-picker`).querySelector(".date-picker__day.is-selected")?.focus();
-}
-
-window.addEventListener("resize", () => {
-  if (pickerState.openId) positionDatePicker();
-});
-
-for (const id of ["snapshot", "interval-end"]) {
-  const input = $(id);
-  input.addEventListener("click", () => openDatePicker(id));
-  input.addEventListener("keydown", (event) => {
-    if (!["Enter", " ", "ArrowDown"].includes(event.key)) return;
-    event.preventDefault();
-    openDatePicker(id);
-  });
-  document.querySelector(`[data-date-for="${id}"]`).addEventListener("click", () => openDatePicker(id));
-}
-
-document.addEventListener("click", (event) => {
-  const dayButton = event.target.closest(".date-picker__day");
-  if (dayButton && pickerState.openId) {
-    syncPickerTime();
-    const { year, month, draft } = pickerState;
-    pickerState.draft = new Date(year, month, Number(dayButton.dataset.day), draft.getHours(), draft.getMinutes());
-    renderDatePicker();
-    $(`${pickerState.openId}-picker`).querySelector(".date-picker__day.is-selected")?.focus();
-    return;
-  }
-  const action = event.target.closest("[data-calendar-action]")?.dataset.calendarAction;
-  if (!action || !pickerState.openId) return;
-  if (action === "cancel") return closeDatePicker(true);
-  if (action === "apply") {
-    if (syncPickerTime() === false) return;
-    const id = pickerState.openId;
-    setDateValue(id, pickerState.draft);
-    closeDatePicker(true);
-    render();
-    saveState();
-    return;
-  }
-  if (action === "now") {
-    pickerState.draft = new Date();
-    pickerState.draft.setSeconds(0, 0);
-    pickerState.year = pickerState.draft.getFullYear();
-    pickerState.month = pickerState.draft.getMonth();
-  } else {
-    syncPickerTime();
-    const view = new Date(pickerState.year, pickerState.month + (action === "next" ? 1 : -1), 1);
-    pickerState.year = view.getFullYear();
-    pickerState.month = view.getMonth();
-  }
-  renderDatePicker();
-});
-
-document.addEventListener("input", (event) => {
-  if (event.target.matches('.date-picker [data-time-unit]')) syncPickerTime();
-});
-document.addEventListener("pointerdown", (event) => {
-  if (pickerState.openId && !event.target.closest(".date-control")) closeDatePicker();
-});
-document.addEventListener("keydown", (event) => {
-  if (!pickerState.openId) return;
-  if (event.key === "Escape") {
-    event.preventDefault();
-    closeDatePicker(true);
-    return;
-  }
-  const day = event.target.closest(".date-picker__day");
-  const delta = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[event.key];
-  if (!day || !delta) return;
-  event.preventDefault();
-  syncPickerTime();
-  const { year, month, draft } = pickerState;
-  pickerState.draft = new Date(year, month, Number(day.dataset.day) + delta, draft.getHours(), draft.getMinutes());
-  pickerState.year = pickerState.draft.getFullYear();
-  pickerState.month = pickerState.draft.getMonth();
-  renderDatePicker();
-  $(`${pickerState.openId}-picker`).querySelector(".date-picker__day.is-selected")?.focus();
-});
-
+const { init: initNumberControls } = createNumberControls({ isAmountInput: input => usesAmountShortcuts && input.hasAttribute("data-stat-amount"), stepAmount });
+const { close: closeDatePicker } = createDatePicker({ ids: ["snapshot", "interval-end"], readDate, setDateValue, initNumberControls, onChange: () => { render(); saveState(); } });
 
 $("accounts-grid").innerHTML = accounts.map(accountMarkup).join("");
 initNumberControls($("accounts-grid"));
